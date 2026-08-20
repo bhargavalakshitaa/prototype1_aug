@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    html,body{margin:0;padding:0;background:#FBFBF8;color:#1B1D20;}
+    *{box-sizing:border-box;}
+    a{color:#23527C;} a:hover{color:#1B4062;}
+    button,input{font-family:inherit;}
+    ::selection{background:rgba(35,82,124,0.16);}
+    :focus-visible{outline:2px solid #23527C;outline-offset:1px;}
+    @keyframes cmspulse{0%,100%{opacity:0.25;}50%{opacity:1;}}
+    @media print{ header,nav{display:none !important;} body{background:#FFFFFF;} }
+  </style>
+</helmet>
+<div style="min-height:100vh;background:#FBFBF8;color:#1B1D20;font-family:'Source Serif 4',Georgia,serif;">
+
+  <header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;height:46px;padding:0 18px;background:#FBFBF8;border-bottom:1px solid #D9D7D0;">
+    <button onClick="{{ doTop }}" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-variant:small-caps;letter-spacing:0.14em;font-size:14px;font-weight:600;color:#1B1D20;white-space:nowrap;">construction matter system</button>
+    <div style="position:relative;width:300px;flex-shrink:0;">
+      <input value="{{ swText }}" onChange="{{ onSw }}" onFocus="{{ swFocus }}" onBlur="{{ swBlur }}" placeholder="Find a matter" style="width:100%;padding:5px 9px;border:1px solid #D9D7D0;border-radius:0;background:#FBFBF8;font-size:13px;color:#1B1D20;" style-focus="border-color:#23527C;background:#FFFFFF;">
+      <sc-if value="{{ swOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;top:31px;left:0;right:0;background:#FFFFFF;border:1px solid #D9D7D0;box-shadow:0 4px 14px rgba(27,29,32,0.10);z-index:60;">
+          <sc-for list="{{ swOpts }}" as="opt" hint-placeholder-count="0">
+            <button onMouseDown="{{ opt.pick }}" style="display:block;width:100%;padding:8px 10px;background:none;border:none;border-bottom:1px solid #EFEEE8;cursor:pointer;text-align:left;font-family:inherit;font-size:12.5px;color:#1B1D20;" style-hover="background:#EFF3F8;">
+              <span style="display:block;">{{ opt.t }}</span>
+              <span style="display:flex;justify-content:space-between;gap:10px;margin-top:2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;"><span>{{ opt.clock }}</span><span>{{ opt.await }}</span></span>
+            </button>
+          </sc-for>
+          <button onMouseDown="{{ pickIntake }}" style="display:block;width:100%;padding:8px 10px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit;font-size:12.5px;color:#23527C;" style-hover="background:#EFF3F8;">+ Institute a matter</button>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1;"></div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;border:1px solid #D9D7D0;padding:3px 8px;color:#1B1D20;">NOW · {{ nowCount }}</span>
+    <button onClick="{{ doPrint }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12px;padding:4px 12px;cursor:pointer;" style-hover="background:#EFF3F8;">print</button>
+  </header>
+
+  <sc-if value="{{ showIdx }}" hint-placeholder-val="{{ true }}">
+    <nav style="position:fixed;right:6px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:7px;align-items:flex-end;">
+      <sc-for list="{{ idx }}" as="ix" hint-placeholder-count="5">
+        <button onClick="{{ ix.go }}" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:10.5px;color:#6B6E72;" style-hover="color:#23527C;">{{ ix.label }}</button>
+      </sc-for>
+    </nav>
+  </sc-if>
+
+  <sc-if value="{{ isSheet }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="The Matter Sheet" style="max-width:880px;margin:0 auto;padding:10px 26px 90px;">
+
+    <div id="sec-now" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:34px;display:flex;justify-content:space-between;align-items:baseline;">
+      <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">now</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">{{ nowMeta }}</span>
+    </div>
+    <sc-for list="{{ nowRows }}" as="n" hint-placeholder-count="3">
+      <div style="{{ n.rowStyle }}">
+        <button onClick="{{ n.toggle }}" style="display:flex;width:100%;justify-content:space-between;align-items:baseline;gap:12px;background:none;border:none;padding:0;cursor:pointer;text-align:left;font-family:inherit;font-size:13.5px;color:#1B1D20;">
+          <span>{{ n.title }}</span>
+          <span style="display:flex;gap:14px;align-items:baseline;flex-shrink:0;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6B6E72;">{{ n.clock }}</span><span style="font-variant:small-caps;letter-spacing:0.1em;font-size:11px;color:#23527C;">{{ n.openLabel }}</span></span>
+        </button>
+        <sc-if value="{{ n.open }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px;border:1px solid #D9D7D0;padding:12px 14px;">
+
+            <sc-if value="{{ n.is810 }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #A23B37;padding:8px 10px;font-size:13px;font-weight:600;color:#A23B37;">The closure was automatic. The filing never is.</div>
+              <p style="margin:10px 0 0;font-size:13px;line-height:1.55;">O.VIII R.10 against D3 — served <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">12.04.2026</span>, day <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">131</span>; the closure stands recorded of itself. The instrument in full sits at <a href="#sec-clocks">§ Clocks</a>.</p>
+              <sc-if value="{{ b810Idle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armB810 }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">authorise the filing</button></div></sc-if>
+              <sc-if value="{{ b810Armed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On authorisation the filing draft enters the record as counsel-settled work product.</span><button onClick="{{ confB810 }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+              <sc-if value="{{ b810Done }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ b810End }}</div></sc-if>
+            </sc-if>
+
+            <sc-if value="{{ n.isDefect }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">THE DEFECT</div>
+              <p style="margin:4px 0 0;font-size:13px;line-height:1.55;">The plaint values the relief at <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,41,00,000</span>; the court fee stands computed on <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,14,00,000</span>. Scrutiny has returned the valuation.</p>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">THE CURE</div>
+              <p style="margin:4px 0 0;font-size:13px;line-height:1.55;">Refile the valuation certificate with the fee computed on the pleaded principal; make good the deficit before the next listing.</p>
+              <sc-if value="{{ cureIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armCure }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">record cure</button></div></sc-if>
+              <sc-if value="{{ cureArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The cure is recorded and endorsed on the file.</span><button onClick="{{ confCure }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+              <sc-if value="{{ cureDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ cureEnd }}</div></sc-if>
+            </sc-if>
+
+            <sc-if value="{{ n.isCits }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">CITATIONS — O.XII R.6 DRAFT (<a href="#sec-steps">§ Steps</a>)</div>
+              <sc-for list="{{ cits }}" as="c" hint-placeholder-count="2">
+                <div style="padding:8px 0;border-bottom:1px solid #EFEEE8;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                    <span style="font-size:12.5px;">{{ c.name }}</span>
+                    <sc-if value="{{ c.idle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.arm }}" style="flex-shrink:0;background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;" style-hover="background:#EFF3F8;">record verification</button></sc-if>
+                    <sc-if value="{{ c.v }}" hint-placeholder-val="{{ false }}"><span style="flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#3E6E5A;">VERIFIED</span></sc-if>
+                  </div>
+                  <sc-if value="{{ c.armed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12px;">Verification is recorded against the citation and endorsed.</span><button onClick="{{ c.conf }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;">cancel</button></div></sc-if>
+                  <sc-if value="{{ c.endLine }}" hint-placeholder-val="{{ false }}"><div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ c.endLine }}</div></sc-if>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{ n.isMed }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0 0 4px;font-size:13px;line-height:1.55;">The outcome is recorded at <a href="#sec-med">§ Mediation</a>; it may equally be recorded here.</p>
+              <sc-if value="{{ medControls }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                  <button onClick="{{ selS }}" style="{{ sStyle }}"><span style="font-weight:600;font-size:13px;">Settled</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The matter closes; the resolution is recorded.</span></button>
+                  <button onClick="{{ selF }}" style="{{ fStyle }}"><span style="font-weight:600;font-size:13px;">Failed — certificate received</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The date of the certificate is required; institution opens.</span></button>
+                  <button onClick="{{ selE }}" style="{{ eStyle }}"><span style="font-weight:600;font-size:13px;">Window expired</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The expiry is recorded on the file.</span></button>
+                  <button onClick="{{ selO }}" style="{{ oStyle }}"><span style="font-weight:600;font-size:13px;">Record counsel's override — s. 12A</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">A typed basis is required; it enters the record verbatim.</span></button>
+                </div>
+                <sc-if value="{{ pickF }}" hint-placeholder-val="{{ false }}"><label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">Date of the failure certificate</label><input type="date" value="{{ medDate }}" onChange="{{ onMedDate }}" style="margin-top:4px;padding:5px 9px;border:1px solid #D9D7D0;border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:12px;" style-focus="border-color:#23527C;"></sc-if>
+                <sc-if value="{{ pickO }}" hint-placeholder-val="{{ false }}"><label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">Counsel's basis (entered in the Record verbatim)</label><input value="{{ medBasis }}" onChange="{{ onMedBasis }}" placeholder="Typed and entered verbatim" style="width:100%;margin-top:4px;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;" style-focus="border-color:#23527C;"></sc-if>
+                <sc-if value="{{ medIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armMed }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">{{ medVerb }}</button></div></sc-if>
+                <sc-if value="{{ medArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">{{ medStatement }}</span><button onClick="{{ confMed }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+                <sc-if value="{{ medErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:11.5px;color:#A23B37;">{{ medErr }}</div></sc-if>
+              </sc-if>
+              <sc-if value="{{ medDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ medEndLine }}</div></sc-if>
+            </sc-if>
+
+            <sc-if value="{{ n.isMapC }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0;font-size:13px;line-height:1.55;">The map sits at <a href="#sec-map">§ Map</a> under the confirmation wash; cells cycle stance on click until confirmed.</p>
+              <sc-if value="{{ cmIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armCM }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">confirm the map</button></div></sc-if>
+              <sc-if value="{{ cmArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On confirmation the map enters the record; the clocks begin to run.</span><button onClick="{{ confCM }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+            </sc-if>
+
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+    <sc-if value="{{ nowEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:12px 2px;font-size:13px;color:#6B6E72;">Nothing awaits counsel on this matter.</div>
+    </sc-if>
+
+    <div id="sec-cover" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;">
+      <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">cover</span>
+    </div>
+    <div style="text-align:center;padding:26px 10px 0;">
+      <h1 style="margin:0;font-size:23px;font-weight:600;line-height:1.3;">{{ cvTitle }}</h1>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3C3F44;margin-top:8px;">{{ cvSub }}</div>
+    </div>
+    <div style="margin-top:18px;border-top:1px solid #D9D7D0;border-bottom:1px solid #D9D7D0;padding:9px 2px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;font-size:13px;">
+      <span>Stage: <span style="font-weight:600;">{{ cvStage }}</span></span>
+      <span>Next hearing <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">{{ cvHearing }}</span></span>
+      <span>Counsel <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">{{ cvCounsel }}</span></span>
+      <span>Mediation: <span style="{{ cvMedStyle }}">{{ cvMedText }}</span></span>
+      <sc-if value="{{ cvFormLink }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleCure }}" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-size:13px;color:#1B1D20;">Formalities: <span style="color:#A23B37;text-decoration:underline;">{{ cvFormText }}</span></button>
+      </sc-if>
+      <sc-if value="{{ cvFormPlain }}" hint-placeholder-val="{{ true }}">
+        <span>Formalities: <span style="{{ cvFormStyle }}">{{ cvFormText }}</span></span>
+      </sc-if>
+    </div>
+    <sc-if value="{{ covOverride }}" hint-placeholder-val="{{ false }}">
+      <div style="border-bottom:2px solid #A23B37;padding:7px 2px;font-size:12.5px;color:#A23B37;">
+        Instituted on counsel's recorded override — s. 12A. <a href="#sec-record" style="font-size:12px;">The endorsement</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{ covClosed }}" hint-placeholder-val="{{ false }}">
+      <div style="border-bottom:1px solid #D9D7D0;padding:9px 2px;text-align:center;font-variant:small-caps;letter-spacing:0.12em;font-size:13px;color:#3E6E5A;">{{ covClosedText }}</div>
+    </sc-if>
+    <sc-if value="{{ cureOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:12px;border:1px solid #D9D7D0;padding:12px 14px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">THE DEFECT</div>
+        <p style="margin:4px 0 0;font-size:13px;line-height:1.55;">The plaint values the relief at <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,41,00,000</span>; the court fee stands computed on <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,14,00,000</span>. Scrutiny has returned the valuation.</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">THE CURE</div>
+        <p style="margin:4px 0 0;font-size:13px;line-height:1.55;">Refile the valuation certificate with the fee computed on the pleaded principal; make good the deficit before the next listing.</p>
+        <sc-if value="{{ cureIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armCure }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">record cure</button></div></sc-if>
+        <sc-if value="{{ cureArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The cure is recorded and endorsed on the file.</span><button onClick="{{ confCure }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+        <sc-if value="{{ cureDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ cureEnd }}</div></sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasClocks }}" hint-placeholder-val="{{ true }}">
+      <div id="sec-clocks" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;">
+        <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">clocks</span>
+      </div>
+      <sc-for list="{{ clkRows }}" as="c" hint-placeholder-count="3">
+        <div style="border-bottom:1px solid #E7E5DE;padding:10px 2px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <span style="{{ c.style }}">{{ c.text }}</span>
+            <span style="display:flex;gap:12px;align-items:center;flex-shrink:0;">
+              <sc-if value="{{ c.terminal }}" hint-placeholder-val="{{ false }}"><span title="File closed" style="display:inline-block;width:12px;height:12px;background:#A23B37;"></span></sc-if>
+              <sc-if value="{{ c.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.toggleEdit }}" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:11px;color:#23527C;">edit date</button></sc-if>
+            </span>
+          </div>
+          <sc-if value="{{ c.link810 }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:6px;"><button onClick="{{ toggle810 }}" style="background:none;border:none;padding:0;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#23527C;text-decoration:underline;">O.VIII R.10 draft — authorise</button></div>
+          </sc-if>
+          <sc-if value="{{ c.editOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:10px;border:1px solid #D9D7D0;padding:12px 14px;">
+              <div style="font-size:12.5px;color:#A23B37;">All periods recompute; the closure re-evaluates.</div>
+              <label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">The recomputed commencement date</label>
+              <input type="date" value="{{ c.dateVal }}" onChange="{{ c.onDateI }}" style="margin-top:4px;padding:5px 9px;border:1px solid #D9D7D0;border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:12px;" style-focus="border-color:#23527C;">
+              <label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">Reason (entered in the Record verbatim)</label>
+              <input value="{{ c.reasonVal }}" onChange="{{ c.onReasonI }}" placeholder="Typed and entered verbatim" style="width:100%;margin-top:4px;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;" style-focus="border-color:#23527C;">
+              <sc-if value="{{ c.rcIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ c.armRc }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">recompute</button></div></sc-if>
+              <sc-if value="{{ c.rcArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The recomputation is recorded; every dependent period follows.</span><button onClick="{{ c.confRc }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+              <sc-if value="{{ c.rcErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:11.5px;color:#A23B37;">{{ c.rcErr }}</div></sc-if>
+            </div>
+          </sc-if>
+          <sc-for list="{{ c.endLines }}" as="el" hint-placeholder-count="0">
+            <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#5A5D61;">{{ el.t }}</div>
+          </sc-for>
+          <sc-if value="{{ c.show810Exp }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:10px;border:1px solid #D9D7D0;padding:12px 14px;">
+              <div style="border:1px solid #A23B37;padding:8px 10px;font-size:13px;font-weight:600;color:#A23B37;">The closure was automatic. The filing never is.</div>
+              <div style="margin-top:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">I. STATUTORY BASIS</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Order VIII Rule 10 CPC, read with the proviso to Order V Rule 1(1) as it applies to commercial suits.</p></div>
+              <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">II. FORM</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Memo with draft judgment praying pronouncement against D3; no application to receive the written statement lies.</p></div>
+              <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">III. THE LEGAL STANDARD</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">The forfeiture on the one hundred and twentieth day is absolute — <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">SCG Contracts, (2019) 12 SCC 210</span>.</p></div>
+              <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">IV. APPLICATION TO THE RECORD</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">D3 was served on <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">12.04.2026</span>; today is day <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">131</span>. The closure was recorded of itself on the file.</p></div>
+              <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">V. PRAYER</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Pronouncement of judgment against D3 under Order VIII Rule 10; costs.</p></div>
+              <sc-if value="{{ b810Idle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armB810 }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">authorise the filing</button></div></sc-if>
+              <sc-if value="{{ b810Armed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On authorisation the filing draft enters the record as counsel-settled work product.</span><button onClick="{{ confB810 }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+              <sc-if value="{{ b810Done }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ b810End }}</div></sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ hasMap }}" hint-placeholder-val="{{ true }}">
+      <div id="sec-map" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">map — admissions &amp; denials</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">{{ mapMeta }}</span>
+      </div>
+      <sc-if value="{{ mapUn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #D9D7D0;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#23527C;">AWAITING COUNSEL'S CONFIRMATION — NO CLOCK RUNS UNTIL CONFIRMED</span>
+          <sc-if value="{{ cmIdle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ armCM }}" style="flex-shrink:0;background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12px;padding:4px 12px;cursor:pointer;" style-hover="background:#EFF3F8;">confirm the map</button></sc-if>
+        </div>
+        <sc-if value="{{ cmArmed }}" hint-placeholder-val="{{ false }}"><div style="padding:9px 2px;border-bottom:1px solid #D9D7D0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On confirmation the map enters the record; the clocks begin to run.</span><button onClick="{{ confCM }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12px;padding:4px 12px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12px;padding:4px 12px;cursor:pointer;">cancel</button></div></sc-if>
+      </sc-if>
+      <div style="{{ mapWashStyle }}">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:6px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">Plaint</th>
+              <sc-for list="{{ mapHeads }}" as="h" hint-placeholder-count="3">
+                <th style="text-align:left;padding:6px 8px;font-size:10px;letter-spacing:0.08em;color:#6B6E72;font-weight:600;border-left:1px solid #EFEEE8;font-family:'IBM Plex Mono',monospace;">{{ h.t }}</th>
+              </sc-for>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ mapRows }}" as="row" hint-placeholder-count="8">
+              <tr style="border-top:1px solid #E7E5DE;vertical-align:top;">
+                <td style="padding:8px 4px;width:34%;">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">{{ row.para }}</span>
+                  <span style="font-size:12px;color:#3C3F44;"> {{ row.gist }}</span>
+                </td>
+                <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="3">
+                  <td style="border-left:1px solid #EFEEE8;padding:0;">
+                    <button onClick="{{ cell.click }}" style="{{ cell.style }}">{{ cell.label }}</button>
+                  </td>
+                </sc-for>
+              </tr>
+              <sc-if value="{{ row.note }}" hint-placeholder-val="{{ false }}">
+                <tr><td colSpan="{{ row.span }}" style="padding:0 4px 8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#23527C;">{{ row.note }}</td></tr>
+              </sc-if>
+              <sc-if value="{{ row.detailOpen }}" hint-placeholder-val="{{ false }}">
+                <tr><td colSpan="{{ row.span }}" style="padding:0 0 10px;">
+                  <div style="border:1px solid #D9D7D0;padding:12px 14px;margin-top:2px;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;">{{ row.dTitle }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">PLEADING EXTRACT</div>
+                    <p style="margin:3px 0 0;font-size:13px;line-height:1.55;">{{ row.dExtract }}</p>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">THE STANCE ON THE RECORD</div>
+                    <p style="margin:3px 0 0;font-size:13px;line-height:1.55;">{{ row.dWs }}</p>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">THE STRONGEST DENIAL AVAILABLE ON THESE FACTS</div>
+                    <p style="margin:3px 0 0;font-size:13px;line-height:1.55;">{{ row.dStrong }}</p>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:10px;">WHERE THE FILED PLEADING FALLS SHORT</div>
+                    <p style="margin:3px 0 0;font-size:13px;line-height:1.55;">{{ row.dShort }}</p>
+                  </div>
+                </td></tr>
+              </sc-if>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <sc-for list="{{ mapEndLines }}" as="me" hint-placeholder-count="0">
+        <div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#5A5D61;">{{ me.t }}</div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ hasSteps }}" hint-placeholder-val="{{ true }}">
+      <div id="sec-steps" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;">
+        <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">steps</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:7px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">Step</th>
+            <th style="text-align:left;padding:7px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">Against</th>
+            <th style="text-align:left;padding:7px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">State</th>
+            <th style="text-align:left;padding:7px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">Their best answer</th>
+            <th style="text-align:left;padding:7px 4px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6E72;font-weight:600;">How this fails</th>
+            <th style="padding:7px 4px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid #E7E5DE;vertical-align:top;">
+            <td style="padding:9px 4px;font-size:12px;line-height:1.5;font-weight:600;">O.XII R.6 — judgment on admissions (partial)</td>
+            <td style="padding:9px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;">D1</td>
+            <td style="padding:9px 4px;"><span style="{{ s1StateStyle }}">{{ s1State }}</span></td>
+            <td style="padding:9px 4px;font-size:12px;line-height:1.5;">The admission is qualified by the interest dispute.</td>
+            <td style="padding:9px 4px;font-size:12px;line-height:1.5;">If the admission reads as conditional — the prayer is confined to the unqualified principal.</td>
+            <td style="padding:9px 4px;text-align:right;"><button onClick="{{ toggleDraft }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;white-space:nowrap;" style-hover="background:#EFF3F8;">{{ draftLabel }}</button></td>
+          </tr>
+          <sc-if value="{{ draftOpen }}" hint-placeholder-val="{{ false }}">
+            <tr><td colSpan="6" style="padding:0 0 12px;">
+              <div style="border:1px solid #D9D7D0;padding:14px 16px;margin-top:2px;">
+                <div style="border:1px solid #A23B37;padding:9px 11px;">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:#A23B37;">HOW THIS APPLICATION FAILS ON THESE FACTS</div>
+                  <p style="margin:5px 0 0;font-size:12.5px;line-height:1.55;">If the admission reads as conditional on the interest dispute, the discretion under O.XII R.6 will not be exercised; the prayer must stand confined to the unqualified principal, or the application invites dismissal with costs.</p>
+                </div>
+                <div style="margin-top:14px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">I. STATUTORY BASIS</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Order XII Rule 6 CPC — judgment on admissions; read with the Commercial Courts Act, 2015.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">II. FORM</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Application supported by affidavit, annexing the pleadings relied upon.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">III. THE LEGAL STANDARD</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">The admission must be clear, unambiguous and unconditional; the power is discretionary and is not exercised where the admission bears two constructions.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">IV. APPLICATION TO THE RECORD</div>
+                  <p style="margin:3px 0 0;font-size:13px;line-height:1.55;">D1's written statement admits execution of Ex. P-4, the Delivery acknowledgement of <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">11.01.2026</span>.<sc-if value="{{ refineOrig }}" hint-placeholder-val="{{ true }}"><span> The admission of the principal appears from the correspondence read with ¶4 of the plaint.</span></sc-if><sc-if value="{{ refineDone }}" hint-placeholder-val="{{ false }}"><span style="background:rgba(35,82,124,0.13);"> The admission of <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,41,00,000</span> is anchored to Ex. P-4 — the Delivery acknowledgement of <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">11.01.2026</span> — and stands unqualified on its face.</span></sc-if><span> The dispute pleaded is confined to interest; judgment is sought on the principal of <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,41,00,000</span>.</span></p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">V. PRAYER</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Judgment on admission for <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">₹2,41,00,000</span> with costs; the suit to proceed on the residue.</p></div>
+
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;margin-top:16px;border-top:1px solid #D9D7D0;padding-top:10px;">CITATIONS</div>
+                <sc-for list="{{ cits }}" as="c" hint-placeholder-count="2">
+                  <div style="padding:8px 0;border-bottom:1px solid #EFEEE8;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                      <span style="font-size:12.5px;">{{ c.name }}</span>
+                      <sc-if value="{{ c.idle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.arm }}" style="flex-shrink:0;background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;" style-hover="background:#EFF3F8;">record verification</button></sc-if>
+                      <sc-if value="{{ c.v }}" hint-placeholder-val="{{ false }}"><span style="flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#3E6E5A;">VERIFIED</span></sc-if>
+                    </div>
+                    <sc-if value="{{ c.armed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12px;">Verification is recorded against the citation and endorsed.</span><button onClick="{{ c.conf }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;">cancel</button></div></sc-if>
+                    <sc-if value="{{ c.endLine }}" hint-placeholder-val="{{ false }}"><div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ c.endLine }}</div></sc-if>
+                  </div>
+                </sc-for>
+
+                <sc-if value="{{ refineInput }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:8px;margin-top:14px;">
+                    <input value="{{ refineText }}" onChange="{{ onRefine }}" placeholder="Tighten Part IV; anchor the admission to the exhibit." style="flex:1;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:12.5px;" style-focus="border-color:#23527C;">
+                    <button onClick="{{ submitRefine }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">refine</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refineDone }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:12px;font-size:12px;color:#6B6E72;line-height:1.55;">Counsel's instruction — <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;">"{{ refineEcho }}"</span> — one sentence of Part IV changed, highlighted above.</div>
+                  <sc-if value="{{ refEndLine }}" hint-placeholder-val="{{ false }}"><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#5A5D61;">{{ refEndLine }}</div></sc-if>
+                </sc-if>
+
+                <sc-if value="{{ notFinalised }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top:16px;padding-top:12px;border-top:1px solid #D9D7D0;">
+                    <sc-if value="{{ finBlocked }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <button style="background:none;border:1px solid #C9C7C0;border-radius:0;color:#8A8D8F;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 16px;cursor:not-allowed;">finalise</button>
+                        <span style="font-size:11.5px;color:#8A8D8F;">{{ finReason }}</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ finIdle }}" hint-placeholder-val="{{ false }}"><button onClick="{{ armFin }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 16px;cursor:pointer;" style-hover="background:#EFF3F8;">finalise</button></sc-if>
+                    <sc-if value="{{ finArmed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On finalisation this instrument enters the record as counsel-settled work product.</span><button onClick="{{ confFin }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ finalised }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:16px;padding-top:12px;border-top:1px solid #D9D7D0;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#3E6E5A;">FINALISED — ENTERED IN THE RECORD AS COUNSEL-SETTLED WORK PRODUCT</span>
+                    <sc-if value="{{ finEndLine }}" hint-placeholder-val="{{ false }}"><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#5A5D61;">{{ finEndLine }}</div></sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </td></tr>
+          </sc-if>
+
+          <tr style="{{ s2RowStyle }}">
+            <td style="padding:9px 4px;font-size:12px;line-height:1.5;font-weight:600;">O.XI R.5 — production</td>
+            <td style="padding:9px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;">D2</td>
+            <td style="padding:9px 4px;"><span style="{{ s2StateStyle }}">{{ s2State }}</span></td>
+            <td colSpan="2" style="padding:9px 4px;font-size:12px;line-height:1.5;">{{ s2Line }}</td>
+            <td style="padding:9px 4px;text-align:right;">
+              <sc-if value="{{ s2Held }}" hint-placeholder-val="{{ true }}">
+                <button style="background:none;border:1px solid #C9C7C0;border-radius:0;color:#8A8D8F;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:not-allowed;white-space:nowrap;">proceed to draft</button>
+                <div style="margin-top:4px;font-size:10.5px;color:#8A8D8F;">The application has not ripened.</div>
+              </sc-if>
+              <sc-if value="{{ s2Live }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ toggleOxi }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.08em;font-size:11px;padding:3px 10px;cursor:pointer;white-space:nowrap;" style-hover="background:#EFF3F8;">proceed to draft</button>
+              </sc-if>
+            </td>
+          </tr>
+          <sc-if value="{{ oxiOpen }}" hint-placeholder-val="{{ false }}">
+            <tr><td colSpan="6" style="padding:0 0 12px;">
+              <div style="border:1px solid #D9D7D0;padding:14px 16px;margin-top:2px;">
+                <div style="margin-top:2px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">I. STATUTORY BASIS</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Order XI Rule 5 CPC, as substituted for commercial disputes — production against D2.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">II. FORM</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Application with affidavit; the notice of <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">18.08.2026</span> annexed.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">III. THE LEGAL STANDARD</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Production follows on silence after due notice; adverse inference on continued default.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">IV. APPLICATION TO THE RECORD</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">The notice has run its course without production or objection.</p></div>
+                <div style="margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#6B6E72;">V. PRAYER</div><p style="margin:3px 0 0;font-size:13px;line-height:1.55;">Direction to D2 to produce the certified measurement records; costs of the application.</p></div>
+                <sc-if value="{{ oxiIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armOxi }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">authorise the application</button></div></sc-if>
+                <sc-if value="{{ oxiArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">On authorisation the application enters the record as counsel-settled work product.</span><button onClick="{{ confOxi }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+                <sc-if value="{{ oxiDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ oxiEnd }}</div></sc-if>
+              </div>
+            </td></tr>
+          </sc-if>
+        </tbody>
+      </table>
+    </sc-if>
+
+    <sc-if value="{{ hasMed }}" hint-placeholder-val="{{ false }}">
+      <div id="sec-med" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;">
+        <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">mediation — s. 12A</span>
+      </div>
+      <p style="margin:14px 0 0;font-size:13px;line-height:1.55;">Institution is unreachable except upon a recorded outcome or counsel's recorded override.</p>
+      <sc-if value="{{ medControls }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+          <button onClick="{{ selS }}" style="{{ sStyle }}"><span style="font-weight:600;font-size:13px;">Settled</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The matter closes; the resolution is recorded.</span></button>
+          <button onClick="{{ selF }}" style="{{ fStyle }}"><span style="font-weight:600;font-size:13px;">Failed — certificate received</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The date of the certificate is required; institution opens.</span></button>
+          <button onClick="{{ selE }}" style="{{ eStyle }}"><span style="font-weight:600;font-size:13px;">Window expired</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">The expiry is recorded on the file.</span></button>
+          <button onClick="{{ selO }}" style="{{ oStyle }}"><span style="font-weight:600;font-size:13px;">Record counsel's override — s. 12A</span><span style="display:block;font-size:11.5px;color:#6B6E72;margin-top:2px;">A typed basis is required; it enters the record verbatim.</span></button>
+        </div>
+        <sc-if value="{{ pickF }}" hint-placeholder-val="{{ false }}"><label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">Date of the failure certificate</label><input type="date" value="{{ medDate }}" onChange="{{ onMedDate }}" style="margin-top:4px;padding:5px 9px;border:1px solid #D9D7D0;border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:12px;" style-focus="border-color:#23527C;"></sc-if>
+        <sc-if value="{{ pickO }}" hint-placeholder-val="{{ false }}"><label style="display:block;margin-top:10px;font-size:11px;color:#6B6E72;">Counsel's basis (entered in the Record verbatim)</label><input value="{{ medBasis }}" onChange="{{ onMedBasis }}" placeholder="Typed and entered verbatim" style="width:100%;margin-top:4px;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;" style-focus="border-color:#23527C;"></sc-if>
+        <sc-if value="{{ medIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armMed }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">{{ medVerb }}</button></div></sc-if>
+        <sc-if value="{{ medArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">{{ medStatement }}</span><button onClick="{{ confMed }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+        <sc-if value="{{ medErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:11.5px;color:#A23B37;">{{ medErr }}</div></sc-if>
+      </sc-if>
+      <sc-if value="{{ medDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ medEndLine }}</div></sc-if>
+    </sc-if>
+
+    <sc-if value="{{ hasExp }}" hint-placeholder-val="{{ true }}">
+      <div id="sec-exposure" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;">
+        <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">own exposure</span>
+      </div>
+      <div style="border-left:2px solid #A23B37;padding:12px 0 12px 14px;margin-top:14px;">
+        <p style="margin:0;font-size:13.5px;line-height:1.55;">{{ expText }}</p>
+        <sc-if value="{{ expToDo }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ expClosedForm }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ toggleExpo }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">record resolution</button></div></sc-if>
+          <sc-if value="{{ expOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;">
+              <label style="display:block;font-size:11px;color:#6B6E72;">The act done (entered in Proceedings verbatim)</label>
+              <input value="{{ expNote }}" onChange="{{ onExpNoteI }}" placeholder="Typed and entered verbatim" style="width:100%;margin-top:4px;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;" style-focus="border-color:#23527C;">
+              <sc-if value="{{ exIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armEx }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">record resolution</button></div></sc-if>
+              <sc-if value="{{ exArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The note enters the Proceedings verbatim.</span><button onClick="{{ confEx }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+              <sc-if value="{{ exErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:11.5px;color:#A23B37;">{{ exErr }}</div></sc-if>
+            </div>
+          </sc-if>
+        </sc-if>
+        <sc-if value="{{ expDone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:#3E6E5A;">{{ expEndLine }}</div></sc-if>
+      </div>
+    </sc-if>
+
+    <div id="sec-record" style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:44px;display:flex;justify-content:space-between;align-items:baseline;gap:14px;">
+      <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">record of proceedings</span>
+      <input value="{{ recFilter }}" onChange="{{ onRecFilter }}" placeholder="Filter the record" style="width:200px;padding:3px 8px;border:1px solid #D9D7D0;border-radius:0;background:#FBFBF8;font-size:11.5px;" style-focus="border-color:#23527C;background:#FFFFFF;">
+    </div>
+    <div style="padding:10px 2px 0;">
+      <sc-for list="{{ recRows }}" as="l" hint-placeholder-count="5">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.6;padding:5px 0;border-bottom:1px solid #F0EFE9;color:#2E3136;">{{ l.t }}</div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isIntake }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="The Intake Sheet" style="max-width:880px;margin:0 auto;padding:10px 26px 90px;">
+    <div style="text-align:center;padding:30px 10px 0;">
+      <h1 style="margin:0;font-size:22px;font-weight:600;">Intake — Institute a Matter</h1>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#6B6E72;margin-top:6px;">NOTHING IS CONCLUDED WITHOUT CONFIRMATION</div>
+    </div>
+
+    <div style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:34px;">
+      <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">parties &amp; forum</span>
+    </div>
+    <label style="display:block;margin-top:14px;font-size:11px;color:#6B6E72;">Cause title</label>
+    <input value="{{ iTitle }}" onChange="{{ onITitle }}" placeholder="M/s … v. M/s …" style="width:100%;margin-top:4px;padding:7px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;background:#FFFFFF;" style-focus="border-color:#23527C;">
+    <label style="display:block;margin-top:12px;font-size:11px;color:#6B6E72;">Forum</label>
+    <input value="{{ iForum }}" onChange="{{ onIForum }}" style="width:100%;margin-top:4px;padding:7px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;background:#FFFFFF;" style-focus="border-color:#23527C;">
+    <label style="display:block;margin-top:12px;font-size:11px;color:#6B6E72;">Plaintiffs</label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+      <sc-for list="{{ plRows }}" as="p" hint-placeholder-count="1">
+        <input value="{{ p.v }}" onChange="{{ p.set }}" placeholder="Name of the plaintiff" style="width:100%;padding:7px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;background:#FFFFFF;" style-focus="border-color:#23527C;">
+      </sc-for>
+    </div>
+    <button onClick="{{ addPl }}" style="margin-top:6px;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-size:12px;color:#23527C;text-decoration:underline;">Add a plaintiff</button>
+    <label style="display:block;margin-top:12px;font-size:11px;color:#6B6E72;">Defendants</label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+      <sc-for list="{{ dfRows }}" as="d" hint-placeholder-count="1">
+        <input value="{{ d.v }}" onChange="{{ d.set }}" placeholder="Name of the defendant" style="width:100%;padding:7px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;background:#FFFFFF;" style-focus="border-color:#23527C;">
+      </sc-for>
+    </div>
+    <button onClick="{{ addDf }}" style="margin-top:6px;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-size:12px;color:#23527C;text-decoration:underline;">Add a defendant</button>
+    <div style="margin-top:6px;font-size:11.5px;color:#6B6E72;">One written-statement place is created per defendant named.</div>
+
+    <div style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;margin-top:34px;">
+      <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">the record</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+      <sc-for list="{{ places }}" as="pl" hint-placeholder-count="3">
+        <button onClick="{{ pl.toggle }}" style="{{ pl.style }}">
+          <span style="display:block;font-size:13px;font-weight:600;">{{ pl.label }}</span>
+          <span style="{{ pl.subStyle }}">{{ pl.sub }}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="margin-top:26px;">
+      <sc-if value="{{ iForm }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ readOk }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ doRead }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:13px;padding:7px 18px;cursor:pointer;" style-hover="background:#EFF3F8;">read the record</button>
+        </sc-if>
+        <sc-if value="{{ readBlocked }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button style="background:none;border:1px solid #C9C7C0;border-radius:0;color:#8A8D8F;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:13px;padding:7px 18px;cursor:not-allowed;">read the record</button>
+            <span style="font-size:11.5px;color:#8A8D8F;">Name the cause title and at least one defendant.</span>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ iProcessing }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:30px 10px;text-align:center;border:1px solid #D9D7D0;">
+          <div style="font-size:14px;">Reading the record.</div>
+          <div style="margin-top:6px;font-size:12.5px;color:#6B6E72;">Nothing is concluded without confirmation.</div>
+          <div style="margin:22px auto 0;width:220px;height:2px;background:#23527C;animation:cmspulse 1.1s ease-in-out infinite;"></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ iResult }}" hint-placeholder-val="{{ false }}">
+        <div style="border-top:3px double #D9D7D0;border-bottom:3px double #D9D7D0;padding:7px 2px;">
+          <span style="font-variant:small-caps;letter-spacing:0.18em;font-size:13px;font-weight:600;">the s. 12a test</span>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#6B6E72;">Facts capable of supporting urgency, as pleaded:</div>
+        <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.6;">
+          <li>The supply ceased on <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">11.01.2026</span>; no invocation of any bank guarantee is pleaded.</li>
+          <li>The apprehension of alienation is pleaded on information and belief, without particulars.</li>
+          <li>No interlocutory relief is sought that the mediation period would defeat.</li>
+        </ul>
+        <div style="margin-top:14px;border:1px solid #A23B37;padding:11px 13px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#A23B37;">URGENCY NOT MADE OUT ON THE PLEADED FACTS</div>
+          <p style="margin:7px 0 0;font-size:12.5px;line-height:1.55;">Institution without completing mediation exposes the plaint to rejection under Order VII Rule 11; a recital does not satisfy the proviso.</p>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <sc-if value="{{ imIdle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ armIM }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:6px 16px;cursor:pointer;" style-hover="background:#EFF3F8;">complete mediation first</button></sc-if>
+            <sc-if value="{{ imArmed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The matter is received in Pre-Institution; the mediation window runs from receipt.</span><button onClick="{{ confIM }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+          </div>
+          <div>
+            <sc-if value="{{ ovrClosed }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleOvr }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:6px 16px;cursor:pointer;" style-hover="background:#EFF3F8;">record counsel's override</button></sc-if>
+            <sc-if value="{{ ovrOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #D9D7D0;padding:12px 14px;">
+                <label style="display:block;font-size:11px;color:#6B6E72;">Counsel's basis (entered in the Record verbatim; it stands against the matter permanently)</label>
+                <input value="{{ iBasis }}" onChange="{{ onIBasis }}" placeholder="Typed and entered verbatim" style="width:100%;margin-top:4px;padding:6px 9px;border:1px solid #D9D7D0;border-radius:0;font-size:13px;background:#FFFFFF;" style-focus="border-color:#23527C;">
+                <sc-if value="{{ ioIdle }}" hint-placeholder-val="{{ true }}"><div style="margin-top:12px;"><button onClick="{{ armIO }}" style="background:none;border:1px solid #23527C;border-radius:0;color:#23527C;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#EFF3F8;">record the override</button></div></sc-if>
+                <sc-if value="{{ ioArmed }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:12.5px;">The matter is instituted on counsel's recorded override under s. 12A.</span><button onClick="{{ confIO }}" style="background:#23527C;border:1px solid #23527C;border-radius:0;color:#FFFFFF;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;" style-hover="background:#1B4062;">confirm</button><button onClick="{{ cancelArm }}" style="background:none;border:1px solid #D9D7D0;border-radius:0;color:#6B6E72;font-family:inherit;font-variant:small-caps;letter-spacing:0.1em;font-size:12.5px;padding:5px 14px;cursor:pointer;">cancel</button></div></sc-if>
+                <sc-if value="{{ ioErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:11.5px;color:#A23B37;">{{ ioErr }}</div></sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;processingMs&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1200,&quot;min&quot;:0,&quot;max&quot;:5000,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Engine&quot;},&quot;counselInitials&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NG&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Record&quot;},&quot;rulesVersion&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;v1.3&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Record&quot;}}">
+class Component extends DCLogic {
+  state = this.seed();
+
+  seed() {
+    return {
+      view: 'sheet', activeId: 'deccan',
+      swText: '', swOpen: false, exp: {}, arm: null, errs: {}, inputs: {},
+      recFilter: '', medPick: null, mapOpen: null,
+      matters: [
+        {
+          id: 'deccan', short: 'Deccan Infra', kind: 'inst',
+          title: 'M/s Deccan Infra Pvt Ltd v. Vault Build Co Pvt Ltd & 2 Ors',
+          suit: 'CC 214/2026', forum: 'Commercial Court, Hyderabad', stage: 'Disclosure',
+          counsel: 'NG/AK', nextHearing: '18.09.2026', closed: false, override: false,
+          med: { text: 'WAIVER RECORDED', tone: 'green' }, medDone: true,
+          defect: true, cureEnd: null,
+          defs: [
+            { id: 'D1', start: '25.07.2026', end: [] },
+            { id: 'D2', start: '17.05.2026', end: [] },
+            { id: 'D3', start: '12.04.2026', end: [] }
+          ],
+          notice: { left: 9, ripe: false }, oxiAuth: false, oxiEnd: null,
+          e810: 'awaiting', e810End: null,
+          mapConfirmed: true, mapEnd: [],
+          draft: {
+            cits: [
+              { name: 'Karam Kapahi v. M/s Lal Chand Public Charitable Trust, (2010) 4 SCC 753', v: false, end: null },
+              { name: 'Uttam Singh Duggal & Co. Ltd v. United Bank of India, (2000) 7 SCC 120', v: false, end: null }
+            ],
+            refined: false, echo: '', refEnd: null, finalised: false, finEnd: null
+          },
+          exposure: { text: "Plaint \u00b622 relies on Board minutes 14.03.2024 \u2014 not on the plaintiff's disclosure list. Resolve before the defendants' inspection.", resolved: false, note: '', end: null },
+          paras: [
+            { n: 1, gist: 'Parties and course of dealing', extract: 'The parties dealt on a running account from 2019.', st: ['A', 'A', 'N'] },
+            { n: 2, gist: 'The works contract of 14.02.2024', extract: 'The contract of 14.02.2024 governs the supply and execution.', st: ['A', 'D', 'N'] },
+            { n: 3, gist: 'Supply and execution to certificate', extract: 'Supplies were made and certified to measurement.', st: ['D', 'D', 'N'] },
+            { n: 4, gist: 'The delivery acknowledgement \u2014 \u20b92,41,00,000', extract: 'Ex. P-4, the Delivery acknowledgement of 11.01.2026, records the principal at \u20b92,41,00,000.', st: ['A', 'D', 'N'], note: 'D1 admits \u00b7 D2 denies \u2014 for use.' },
+            { n: 5, gist: 'The defect notices', extract: 'No defect was notified within the contractual period.', st: ['D', 'D', 'N'] },
+            { n: 6, gist: 'Demand and reply', extract: 'The demand of 02.02.2026; the reply admits receipt and pleads adjustment.', st: ['A', 'N', 'N'] },
+            { n: 7, gist: 'Interest at 18% per annum', extract: 'Interest runs at 18% per annum under the contract.', st: ['D', 'D', 'N'] },
+            { n: 8, gist: 'Jurisdiction and valuation', extract: 'The cause arose at Hyderabad; the suit is valued on the principal.', st: ['N', 'D', 'N'] }
+          ],
+          log: [
+            { t: '02.03.2026 12:00 \u00b7 Plaint presented; CC 214/2026, Commercial Court, Hyderabad. \u00b7 AK \u00b7 rules v1.3' },
+            { t: '04.08.2026 11:05 \u00b7 The map of admissions and denials confirmed. \u00b7 NG \u00b7 rules v1.3' },
+            { t: '11.08.2026 15:20 \u00b7 Valuation defect noted on scrutiny; the cure stands outstanding. \u00b7 Registry \u00b7 rules v1.3' },
+            { t: '12.08.2026 06:00 \u00b7 Closure recorded of itself against D3; the one hundred and twentieth day passed. \u00b7 system \u00b7 rules v1.3' },
+            { t: '18.08.2026 09:30 \u00b7 O.XI R.5 notice served on D2. \u00b7 AK \u00b7 rules v1.3' }
+          ]
+        },
+        {
+          id: 'krishna', short: 'Krishna Agro', kind: 'pre',
+          title: 'M/s Krishna Agro Exports v. Sunrise Warehousing Pvt Ltd',
+          suit: 'PRE-FILING', forum: 'Commercial Court, Ranga Reddy', stage: 'Pre-Institution',
+          counsel: 'NG', nextHearing: '\u2014', closed: false, override: false,
+          med: { text: 'REQUIRED', tone: 'red' }, medDone: false, medEnd: null, medWindow: 74,
+          form: { text: 'NOT YET APPLICABLE', tone: 'hatch' },
+          defect: false, defs: [], paras: null, mapConfirmed: false, mapEnd: [],
+          log: [
+            { t: '07.06.2026 10:00 \u00b7 Instruction received; the papers taken into the file. \u00b7 NG \u00b7 rules v1.3' },
+            { t: '09.06.2026 12:00 \u00b7 Pre-institution mediation initiated under s. 12A. \u00b7 NG \u00b7 rules v1.3' }
+          ]
+        }
+      ],
+      intake: { phase: 'form', title: '', forum: 'Commercial Court, Hyderabad', plaintiffs: [''], defendants: [''], filed: {} }
+    };
+  }
+
+  // helpers
+  P(s) { const a = s.split('.'); return new Date(+a[2], +a[1] - 1, +a[0]); }
+  F(d) { const p = x => String(x).padStart(2, '0'); return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear(); }
+  today() { return this.P('21.08.2026'); }
+  days(s) { return Math.round((this.today() - this.P(s)) / 86400000); }
+  stamp() { const n = new Date(); const p = x => String(x).padStart(2, '0'); return '21.08.2026 ' + p(n.getHours()) + ':' + p(n.getMinutes()); }
+  isoToF(iso) { const a = iso.split('-'); return a[2] + '.' + a[1] + '.' + a[0]; }
+  ci() { return this.props.counselInitials ?? 'NG'; }
+  rules() { return 'rules ' + (this.props.rulesVersion ?? 'v1.3'); }
+  mut(fn) { fn(this.state); this.setState({ _v: (this.state._v || 0) + 1 }); }
+  find(id) { return this.state.matters.find(m => m.id === id); }
+  endorse(m, sentence, author) { const line = this.stamp() + ' \u00b7 ' + sentence + ' \u00b7 ' + (author || this.ci()) + ' \u00b7 ' + this.rules(); m.log.push({ t: line }); return line; }
+  MONO() { return "'IBM Plex Mono',Menlo,monospace"; }
+  clockCss(tone) { const c = { red: '#A23B37', blue: '#23527C', green: '#3E6E5A', ink: '#1B1D20', grey: '#8A8D8F' }[tone] || '#1B1D20'; return { fontFamily: this.MONO(), fontSize: '12px', color: c, lineHeight: '1.5' }; }
+  labelCss(tone) {
+    if (tone === 'hatch') return { fontFamily: this.MONO(), fontSize: '10.5px', color: '#6B6E72', background: 'repeating-linear-gradient(45deg,transparent 0px,transparent 3px,#ECEAE3 3px,#ECEAE3 5px)', padding: '1px 5px' };
+    const c = { red: '#A23B37', blue: '#23527C', green: '#3E6E5A', ink: '#1B1D20' }[tone] || '#1B1D20';
+    return { fontFamily: this.MONO(), fontSize: '10.5px', color: c };
+  }
+  clockOf(def) {
+    const day = this.days(def.start);
+    if (day > 120) return { day, tone: 'red', closed: true, text: def.id + ' \u00b7 DAY ' + day + ' \u00b7 RIGHT LOST \u2014 FILE CLOSED' };
+    if (day > 30) return { day, tone: 'blue', closed: false, text: def.id + ' \u00b7 WS DAY ' + day + ' \u00b7 WITHIN OUTER LIMIT \u2014 ON COSTS' + (def.reversed ? ' \u00b7 CLOSURE REVERSED' : '') };
+    return { day, tone: 'green', closed: false, text: def.id + ' \u00b7 WS DAY ' + day + ' \u00b7 IN TIME' + (def.reversed ? ' \u00b7 CLOSURE REVERSED' : '') };
+  }
+  stanceLabel(st) { return st === 'A' ? 'ADMITTED' : st === 'D' ? 'DENIED' : 'NO SPECIFIC DENIAL \u2014 O.VIII R.5'; }
+  nowItems(m) {
+    const out = [];
+    if (!m || m.closed) return out;
+    if (m.kind === 'inst') {
+      if (m.e810 === 'awaiting') out.push({ id: 'now-810', red: true, title: 'O.VIII R.10 filing \u2014 awaiting authorisation', clock: 'AWAITING AUTHORISATION', type: '810' });
+      if (m.defect) out.push({ id: 'now-defect', red: true, title: 'Formalities defect \u2014 valuation understated', clock: 'BEFORE NEXT LISTING', type: 'defect' });
+      if (m.draft && m.draft.cits.some(c => !c.v)) out.push({ id: 'now-cits', red: false, title: m.draft.cits.filter(c => !c.v).length + ' citation(s) awaiting verification \u2014 O.XII R.6 draft', clock: '', type: 'cits' });
+      if (m.paras && !m.mapConfirmed) out.push({ id: 'now-map', red: false, title: 'The map awaits confirmation \u2014 no clock runs', clock: 'NO CLOCK RUNS', type: 'mapc' });
+    } else if (!m.medDone) {
+      out.push({ id: 'now-med', red: false, title: 'Mediation outcome to record', clock: (m.medWindow || 90) + ' DAYS', type: 'med' });
+    }
+    return out;
+  }
+  genParas(defCount) {
+    const g = [['Parties', 'The parties and their dealing'], ['The contract', 'The instrument sued upon'], ['Performance', 'Performance to certificate'], ['The default', 'The default pleaded'], ['Demand', 'Demand and the reply'], ['Valuation', 'Jurisdiction and valuation']];
+    return g.map((x, i) => ({ n: i + 1, gist: x[1], extract: 'As pleaded in the draft record \u2014 \u00b6' + (i + 1) + ', ' + x[0].toLowerCase() + '.', st: Array.from({ length: defCount }, () => 'N') }));
+  }
+
+  componentDidMount() {
+    this.kd = (e) => {
+      if (e.key === 'Escape') {
+        const s = this.state;
+        if (s.arm) { this.mut(x => x.arm = null); return; }
+        if (s.swOpen) { this.mut(x => x.swOpen = false); return; }
+      }
+    };
+    document.addEventListener('keydown', this.kd);
+  }
+  componentWillUnmount() { document.removeEventListener('keydown', this.kd); }
+
+  jump(id) {
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 56, behavior: 'smooth' });
+  }
+
+  // acts
+  doCure(m) { m.defect = false; m.cureEnd = this.endorse(m, 'The valuation defect is cured; the court-fee certificate stands refiled.', 'AK'); }
+  do810(m) { m.e810 = 'authorised'; m.e810End = this.endorse(m, 'The O.VIII R.10 filing against D3 is authorised; the draft enters the record as counsel-settled work product.'); }
+  doCit(m, i) { const c = m.draft.cits[i]; if (c && !c.v) { c.v = true; c.end = this.endorse(m, 'Verification recorded \u2014 ' + c.name + '.'); } }
+  doFin(m) { m.draft.finalised = true; m.draft.finEnd = this.endorse(m, 'The O.XII R.6 application is finalised and enters the record as counsel-settled work product.'); }
+  doOxi(m) { m.oxiAuth = true; m.oxiEnd = this.endorse(m, 'The O.XI R.5 application against D2 is authorised as counsel-settled work product.'); }
+  doCM(m) {
+    m.mapConfirmed = true;
+    m.defs.forEach(df => df.start = this.F(this.today()));
+    m.mapEnd.push({ t: this.endorse(m, 'The map of admissions and denials confirmed; the clocks begin to run.') });
+  }
+  doRc(m, di, iso, reason) {
+    const def = m.defs[di]; const old = def.start; const oldDay = this.days(old);
+    def.start = this.isoToF(iso); const newDay = this.days(def.start);
+    def.end.push({ t: this.endorse(m, 'The period for ' + def.id + ' recomputed; commencement ' + old + ' \u2192 ' + def.start + '. Reason: "' + reason + '".') });
+    const was = oldDay > 120, now = newDay > 120;
+    if (was && !now) {
+      def.reversed = true;
+      def.end.push({ t: this.endorse(m, 'The closure against ' + def.id + ' is reversed on recomputation.', 'system') });
+      if (m.e810 === 'awaiting') { m.e810 = 'reversed'; def.end.push({ t: this.endorse(m, 'The O.VIII R.10 authorisation falls away; the closure no longer stands.', 'system') }); }
+    }
+    if (!was && now) {
+      def.reversed = false;
+      def.end.push({ t: this.endorse(m, 'Closure recorded against ' + def.id + ' on recomputation; the one hundred and twentieth day passed.', 'system') });
+    }
+    if (def.id === 'D2' && m.notice && !m.notice.ripe) {
+      m.notice.left = 9 - (newDay - 96);
+      if (m.notice.left <= 0) { m.notice.left = 0; m.notice.ripe = true; this.endorse(m, 'O.XI R.5 ripened on expiry of the notice period.', 'system'); }
+    }
+  }
+  doMed(m, pick, iso, basis) {
+    m.medDone = true;
+    if (pick === 'settled') {
+      m.closed = true;
+      m.medEnd = this.endorse(m, 'Mediation outcome recorded \u2014 settled; the matter closes of itself.');
+    } else if (pick === 'failed') {
+      const ds = this.isoToF(iso);
+      m.med = { text: 'FAILED \u2014 CERTIFICATE ' + ds, tone: 'green' };
+      m.form = { text: 'INSTITUTION OPEN', tone: 'blue' };
+      m.medEnd = this.endorse(m, 'Mediation outcome recorded \u2014 failed; certificate of ' + ds + '. Institution opens.');
+    } else if (pick === 'expired') {
+      m.med = { text: 'WINDOW EXPIRED', tone: 'red' };
+      m.medEnd = this.endorse(m, 'Mediation outcome recorded \u2014 the window expired.');
+    } else if (pick === 'override') {
+      m.kind = 'inst'; m.override = true; m.stage = 'Pleadings'; m.suit = 'CC ___/2026 \u2014 NUMBER AWAITED';
+      m.med = { text: 'OVERRIDDEN \u2014 s. 12A', tone: 'red' };
+      m.form = { text: 'SCRUTINY PENDING', tone: 'hatch' };
+      m.defs = [{ id: 'D1', name: 'Sunrise Warehousing Pvt Ltd', start: null, end: [] }];
+      m.paras = this.genParas(1); m.mapConfirmed = false;
+      this.endorse(m, "Counsel's basis recorded verbatim \u2014 \"" + basis + '".');
+      m.medEnd = this.endorse(m, "Instituted on counsel's recorded override under s. 12A.");
+    }
+  }
+  createMatter(kind, basis) {
+    const s = this.state; const it = s.intake;
+    const defs = it.defendants.map(x => x.trim()).filter(Boolean);
+    const title = it.title.trim();
+    const short = title.split(/\sv\.?\s/i)[0].replace(/^M\/s\s*/i, '').split(/\s+/).slice(0, 2).join(' ') || 'New matter';
+    this._seq = (this._seq || 0) + 1;
+    const id = 'nm' + this._seq;
+    const base = { id, short, title, forum: it.forum.trim() || 'Commercial Court, Hyderabad', counsel: this.ci(), nextHearing: '\u2014', closed: false, defect: false, mapEnd: [], log: [] };
+    let m;
+    if (kind === 'pre') {
+      m = Object.assign(base, {
+        kind: 'pre', stage: 'Pre-Institution', suit: 'PRE-FILING', override: false,
+        med: { text: 'REQUIRED', tone: 'red' }, medDone: false, medEnd: null, medWindow: 90,
+        form: { text: 'NOT YET APPLICABLE', tone: 'hatch' }, defs: [], paras: null, mapConfirmed: false
+      });
+      this.endorse(m, 'The matter is received; pre-institution mediation to complete.');
+    } else {
+      m = Object.assign(base, {
+        kind: 'inst', stage: 'Pleadings', suit: 'CC ___/2026 \u2014 NUMBER AWAITED', override: true,
+        med: { text: 'OVERRIDDEN \u2014 s. 12A', tone: 'red' }, medDone: true,
+        form: { text: 'SCRUTINY PENDING', tone: 'hatch' },
+        defs: defs.map((n, i) => ({ id: 'D' + (i + 1), name: n, start: null, end: [] })),
+        paras: this.genParas(defs.length), mapConfirmed: false
+      });
+      this.endorse(m, "Counsel's basis recorded verbatim \u2014 \"" + basis + '".');
+      this.endorse(m, "Instituted on counsel's recorded override under s. 12A.");
+    }
+    s.matters.push(m);
+    return m;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const MONO = this.MONO();
+    const m = this.find(s.activeId) || s.matters[0];
+    const armIs = id => s.arm === id;
+    const mkArm = id => () => this.mut(x => { x.arm = id; x.errs = {}; });
+    const cancelArm = () => this.mut(x => x.arm = null);
+    const getIn = k => s.inputs[k] || '';
+    const setIn = k => e => { const v = e.target.value; this.mut(x => x.inputs[k] = v); };
+    const tgl = id => () => this.mut(x => { x.exp[id] = !x.exp[id]; x.arm = null; });
+
+    const now = this.nowItems(m);
+    const nowRows = now.slice().sort((a, b) => (a.red ? 0 : 1) - (b.red ? 0 : 1)).map(n => ({
+      title: n.title, clock: n.clock,
+      rowStyle: { padding: '11px 10px', borderBottom: '1px solid #E7E5DE', borderLeft: n.red ? '2px solid #A23B37' : '2px solid transparent' },
+      open: !!s.exp[n.id], toggle: tgl(n.id), openLabel: s.exp[n.id] ? 'close' : 'open',
+      is810: n.type === '810', isDefect: n.type === 'defect', isCits: n.type === 'cits', isMed: n.type === 'med', isMapC: n.type === 'mapc'
+    }));
+
+    // cover
+    const covForm = m.id === 'deccan'
+      ? (m.defect ? { text: '1 DEFECT \u2014 VALUATION', tone: 'red', link: true } : { text: 'IN ORDER', tone: 'green', link: false })
+      : Object.assign({ link: false }, m.form || { text: '\u2014', tone: 'ink' });
+
+    // clocks
+    let clkRows = [];
+    const hasClocks = m.kind === 'inst';
+    if (hasClocks) {
+      clkRows = m.defs.map((def, di) => {
+        const edKey = 'ed-' + m.id + '-' + def.id;
+        if (!m.mapConfirmed) return {
+          text: def.id + ' \u00b7 NO CLOCK \u2014 MAP UNCONFIRMED', style: this.clockCss('grey'),
+          terminal: false, canEdit: false, editOpen: false, link810: false, show810Exp: false,
+          endLines: def.end || [], rcErr: ''
+        };
+        const c = this.clockOf(def);
+        return {
+          text: c.text, style: this.clockCss(c.tone), terminal: c.closed,
+          canEdit: true, toggleEdit: tgl(edKey), editOpen: !!s.exp[edKey],
+          dateVal: getIn(edKey + '-d'), onDateI: setIn(edKey + '-d'),
+          reasonVal: getIn(edKey + '-r'), onReasonI: setIn(edKey + '-r'),
+          rcIdle: !armIs(edKey), rcArmed: armIs(edKey), armRc: mkArm(edKey),
+          confRc: () => {
+            const iso = getIn(edKey + '-d'), r = getIn(edKey + '-r').trim();
+            if (!iso || !r) { this.mut(x => x.errs[edKey] = 'A date and a typed reason are required; the reason enters the record verbatim.'); return; }
+            this.mut(x => { this.doRc(m, di, iso, r); x.arm = null; x.exp[edKey] = false; x.inputs[edKey + '-d'] = ''; x.inputs[edKey + '-r'] = ''; });
+          },
+          rcErr: s.errs[edKey] || '',
+          endLines: def.end || [],
+          link810: def.id === 'D3' && m.e810 === 'awaiting' && m.id === 'deccan',
+          show810Exp: def.id === 'D3' && m.id === 'deccan' && !!s.exp['clk-810'] && m.e810 !== 'reversed'
+        };
+      });
+    }
+
+    // map
+    const hasMap = !!m.paras;
+    const mapUn = hasMap && !m.mapConfirmed;
+    const span = (m.defs ? m.defs.length : 0) + 1;
+    const mapRows = (m.paras || []).map((p, pi) => {
+      const dOpen = s.mapOpen && s.mapOpen.pi === pi && m.mapConfirmed;
+      let dv = { dTitle: '', dExtract: '', dWs: '', dStrong: '', dShort: '' };
+      if (dOpen) {
+        const di = s.mapOpen.di; const df = m.defs[di]; const st = p.st[di];
+        dv = {
+          dTitle: '\u00b6' + p.n + ' \u00b7 ' + df.id + ' \u2014 ' + this.stanceLabel(st),
+          dExtract: 'Plaint \u00b6' + p.n + ': ' + p.extract,
+          dWs: st === 'A' ? df.id + ' admits \u00b6' + p.n + ' in terms.' : st === 'D' ? df.id + ' denies \u00b6' + p.n + ', without pleading particulars against the exhibit.' : df.id + ' traverses \u00b6' + p.n + ' generally, without meeting its particulars.',
+          dStrong: st === 'A' ? 'None. The admission binds; it is available for use under O.XII R.6.' : st === 'D' ? 'A specific traverse tied to the ledger entries and the inspection memorandum, with the facts relied upon set out.' : 'A specific denial identifying the part of the paragraph disputed and the facts relied upon.',
+          dShort: st === 'A' ? 'Nothing falls short; the paragraph stands admitted on the record.' : st === 'D' ? 'The denial pleads no particulars; on these facts it stands exposed as evasive under O.VIII R.3.' : 'O.VIII R.5 \u2014 a general traverse takes the allegation as admitted against a commercial defendant.'
+        };
+      }
+      return Object.assign({
+        para: '\u00b6' + p.n, gist: p.gist, note: p.note || false, span, detailOpen: !!dOpen,
+        cells: (m.defs || []).map((df, di) => {
+          const st = p.st[di];
+          const color = st === 'A' ? '#3E6E5A' : st === 'N' ? '#23527C' : '#1B1D20';
+          return {
+            label: this.stanceLabel(st),
+            style: { display: 'block', width: '100%', minHeight: '34px', textAlign: 'left', padding: '7px 8px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: MONO, fontSize: '9px', letterSpacing: '0.03em', lineHeight: '1.4', color },
+            click: () => {
+              if (!m.mapConfirmed) {
+                this.mut(x => {
+                  const order = ['A', 'D', 'N']; const cur = p.st[di];
+                  const nx = order[(order.indexOf(cur) + 1) % 3];
+                  p.st[di] = nx;
+                  m.mapEnd.push({ t: this.endorse(m, 'Map corrected \u2014 \u00b6' + p.n + '/' + df.id + ': ' + this.stanceLabel(cur) + ' \u2192 ' + this.stanceLabel(nx) + '.') });
+                });
+              } else {
+                this.mut(x => { x.mapOpen = (x.mapOpen && x.mapOpen.pi === pi && x.mapOpen.di === di) ? null : { pi, di }; });
+              }
+            }
+          };
+        })
+      }, dv);
+    });
+
+    // steps (deccan only)
+    const hasSteps = m.id === 'deccan';
+    const d = this.find('deccan');
+    const cits = (d.draft.cits || []).map((c, i) => ({
+      name: c.name, v: c.v, endLine: c.end || '',
+      idle: !c.v && !armIs('cit' + i), armed: armIs('cit' + i), arm: mkArm('cit' + i),
+      conf: () => this.mut(x => { this.doCit(d, i); x.arm = null; })
+    }));
+    const unv = d.draft.cits.filter(c => !c.v);
+    const s2Ripe = d.notice && d.notice.ripe;
+
+    // mediation vals (for active pre matter or NOW block)
+    const medM = m;
+    const pick = s.medPick;
+    const optStyle = sel => ({ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 0, cursor: 'pointer', fontFamily: 'inherit', border: sel ? '1px solid #23527C' : '1px solid #D9D7D0', background: sel ? '#EFF3F8' : 'transparent', color: '#1B1D20' });
+    const medVerbs = { settled: 'record settlement', failed: 'record failure', expired: 'record expiry', override: 'record the override' };
+    const medStatements = {
+      settled: 'On the record of settlement the matter closes of itself.',
+      failed: 'On the certificate of failure institution opens.',
+      expired: 'The expiry of the window is recorded on the file.',
+      override: 'The matter is instituted on counsel\u2019s recorded override under s. 12A; the basis enters the record verbatim.'
+    };
+    const confMed = () => {
+      if (!pick) { this.mut(x => x.errs.med = 'Choose one outcome.'); return; }
+      const iso = getIn('med-date'), basis = getIn('med-basis').trim();
+      if (pick === 'failed' && !iso) { this.mut(x => x.errs.med = 'The date of the failure certificate is required.'); return; }
+      if (pick === 'override' && !basis) { this.mut(x => x.errs.med = 'A typed basis is required; it enters the record verbatim.'); return; }
+      this.mut(x => { this.doMed(medM, pick, iso, basis); x.arm = null; x.medPick = null; x.inputs['med-date'] = ''; x.inputs['med-basis'] = ''; });
+    };
+
+    // switcher
+    const swOpts = s.matters.filter(mm => (mm.short + ' ' + mm.title + ' ' + mm.suit).toLowerCase().includes(s.swText.trim().toLowerCase())).map(mm => {
+      let clock;
+      if (mm.closed) clock = 'CLOSED';
+      else if (mm.kind === 'pre') clock = 'MEDIATION \u2014 ' + (mm.medWindow || 90) + ' DAYS';
+      else if (!mm.mapConfirmed) clock = 'NO CLOCK \u2014 MAP UNCONFIRMED';
+      else if (mm.id === 'deccan') clock = (mm.notice && mm.notice.ripe) ? 'O.XI R.5 \u2014 RIPE' : 'O.XI \u2014 ' + ((mm.notice && mm.notice.left) || 9) + ' DAYS';
+      else clock = 'WS PERIODS RUN';
+      return {
+        t: mm.title, clock, await: 'AWAITS ' + this.nowItems(mm).length,
+        pick: () => this.mut(x => { x.view = 'sheet'; x.activeId = mm.id; x.swText = ''; x.swOpen = false; x.mapOpen = null; x.arm = null; })
+      };
+    });
+
+    // index
+    const idxDefs = [['Now', 'sec-now'], ['Cover', 'sec-cover']];
+    if (hasClocks) idxDefs.push(['Clocks', 'sec-clocks']);
+    if (hasMap) idxDefs.push(['Map', 'sec-map']);
+    if (hasSteps) idxDefs.push(['Steps', 'sec-steps']);
+    if (m.kind === 'pre') idxDefs.push(['Mediation', 'sec-med']);
+    if (m.exposure) idxDefs.push(['Exposure', 'sec-exposure']);
+    idxDefs.push(['Record', 'sec-record']);
+
+    // record
+    const flt = s.recFilter.trim().toLowerCase();
+    const recRows = (m.log || []).filter(l => !flt || l.t.toLowerCase().includes(flt));
+
+    // intake
+    const it = s.intake;
+    const namedDefs = it.defendants.map(x => x.trim()).filter(Boolean);
+    const placeBase = filed => ({
+      display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 0, cursor: 'pointer', fontFamily: 'inherit',
+      border: filed ? '1px solid #9DBBAC' : '1px solid #D9D7D0',
+      background: filed ? '#F3F7F4' : 'repeating-linear-gradient(45deg,transparent 0px,transparent 4px,#F1EFE9 4px,#F1EFE9 6px)'
+    });
+    const subCss = filed => ({ display: 'block', marginTop: '3px', fontFamily: MONO, fontSize: '10px', color: filed ? '#3E6E5A' : '#8A8D8F' });
+    const places = [];
+    const mkPlace = (key, label, name) => {
+      const filed = !!it.filed[key];
+      places.push({ label, style: placeBase(filed), subStyle: subCss(filed), sub: filed ? name : 'EMPTY PLACE \u2014 awaits the instrument', toggle: () => this.mut(x => x.intake.filed[key] = !x.intake.filed[key]) });
+    };
+    mkPlace('plaint', 'Plaint', 'Plaint \u2014 as settled, 28.07.2026.pdf');
+    namedDefs.forEach((n, i) => mkPlace('ws' + i, 'Written statement \u2014 D' + (i + 1) + ' (' + n + ')', 'WS \u2014 D' + (i + 1) + '.pdf'));
+    mkPlace('evid', 'Evidence & correspondence', 'Bundle \u2014 correspondence & invoices.pdf');
+    const readOk = it.title.trim().length > 0 && namedDefs.length > 0;
+
+    return {
+      // header / chrome
+      doTop: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      swText: s.swText,
+      onSw: e => { const v = e.target.value; this.mut(x => { x.swText = v; x.swOpen = true; }); },
+      swFocus: () => this.mut(x => x.swOpen = true),
+      swBlur: () => setTimeout(() => this.mut(x => x.swOpen = false), 150),
+      swOpen: s.swOpen, swOpts,
+      pickIntake: () => this.mut(x => { x.view = 'intake'; x.swText = ''; x.swOpen = false; x.arm = null; }),
+      nowCount: s.view === 'sheet' ? String(now.length) : '0',
+      doPrint: () => window.print(),
+      showIdx: s.view === 'sheet',
+      idx: idxDefs.map(x => ({ label: x[0], go: () => this.jump(x[1]) })),
+      isSheet: s.view === 'sheet', isIntake: s.view === 'intake',
+      cancelArm,
+
+      // now
+      nowRows, nowEmpty: nowRows.length === 0,
+      nowMeta: now.length + ' AWAIT COUNSEL \u00b7 21.08.2026',
+
+      // cover
+      cvTitle: m.title, cvSub: m.suit + ' \u00b7 ' + m.forum,
+      cvStage: m.stage, cvHearing: m.nextHearing, cvCounsel: m.counsel,
+      cvMedText: m.med.text, cvMedStyle: this.labelCss(m.med.tone),
+      cvFormText: covForm.text, cvFormStyle: this.labelCss(covForm.tone),
+      cvFormLink: covForm.link, cvFormPlain: !covForm.link,
+      toggleCure: tgl('cover-cure'), cureOpen: !!s.exp['cover-cure'] && m.id === 'deccan',
+      covOverride: !!m.override, covClosed: !!m.closed,
+      covClosedText: 'the matter stands closed \u2014 settled at mediation',
+
+      // cure block
+      cureIdle: m.defect === true && !armIs('cure'), cureArmed: armIs('cure'), armCure: mkArm('cure'),
+      confCure: () => this.mut(x => { this.doCure(this.find('deccan')); x.arm = null; }),
+      cureDone: m.id === 'deccan' ? !this.find('deccan').defect : false,
+      cureEnd: this.find('deccan').cureEnd || '',
+
+      // 810 block
+      b810Idle: d.e810 === 'awaiting' && !armIs('810'), b810Armed: armIs('810'), armB810: mkArm('810'),
+      confB810: () => this.mut(x => { this.do810(d); x.arm = null; }),
+      b810Done: d.e810 === 'authorised', b810End: d.e810End || '',
+      toggle810: tgl('clk-810'),
+
+      // clocks
+      hasClocks, clkRows,
+
+      // map
+      hasMap, mapUn,
+      mapMeta: mapUn ? 'UNCONFIRMED' : 'CONFIRMED \u00b7 CELL CLICK OPENS THE ROW',
+      mapWashStyle: mapUn ? { background: 'rgba(35,82,124,0.05)' } : {},
+      mapHeads: (m.defs || []).map(df => ({ t: df.id })),
+      mapRows, mapEndLines: m.mapEnd || [],
+      cmIdle: !armIs('cm'), cmArmed: armIs('cm'), armCM: mkArm('cm'),
+      confCM: () => this.mut(x => { this.doCM(m); x.arm = null; x.exp['now-map'] = false; }),
+
+      // steps
+      hasSteps,
+      s1State: d.draft.finalised ? 'FINALISED' : 'LIVE',
+      s1StateStyle: this.labelCss(d.draft.finalised ? 'green' : 'blue'),
+      draftOpen: !!s.exp['draft'], toggleDraft: tgl('draft'),
+      draftLabel: s.exp['draft'] ? 'close the draft' : (d.draft.finalised ? 'open the instrument' : 'proceed to draft'),
+      cits,
+      refineOrig: !d.draft.refined, refineDone: d.draft.refined, refineEcho: d.draft.echo,
+      refineText: getIn('refine'), onRefine: setIn('refine'),
+      submitRefine: () => {
+        const t = getIn('refine').trim(); if (!t || d.draft.refined) return;
+        this.mut(x => {
+          d.draft.refined = true; d.draft.echo = t; x.inputs['refine'] = '';
+          d.draft.refEnd = this.endorse(d, "Part IV refined on counsel's instruction; the admission anchored to Ex. P-4.");
+        });
+      },
+      refineInput: !d.draft.refined && !d.draft.finalised,
+      refEndLine: d.draft.refEnd || '', finEndLine: d.draft.finEnd || '',
+      finBlocked: unv.length > 0,
+      finReason: unv.length > 0 ? 'Awaiting verification: ' + unv[0].name : '',
+      finIdle: unv.length === 0 && !d.draft.finalised && !armIs('fin'),
+      finArmed: armIs('fin'), armFin: mkArm('fin'),
+      confFin: () => this.mut(x => { this.doFin(d); x.arm = null; }),
+      notFinalised: !d.draft.finalised, finalised: d.draft.finalised,
+      s2Held: !s2Ripe, s2Live: s2Ripe && !d.oxiAuth || s2Ripe,
+      s2State: d.oxiAuth ? 'AUTHORISED' : (s2Ripe ? 'LIVE' : 'HELD'),
+      s2StateStyle: this.labelCss(d.oxiAuth ? 'green' : (s2Ripe ? 'blue' : 'hatch')),
+      s2Line: s2Ripe ? 'Ripened on expiry of the notice period.' : 'Notice served day 3; ' + ((d.notice && d.notice.left) || 9) + ' days to run; ripens on silence.',
+      s2RowStyle: s2Ripe ? { borderTop: '1px solid #E7E5DE', verticalAlign: 'top' } : { borderTop: '1px solid #E7E5DE', verticalAlign: 'top', background: 'repeating-linear-gradient(45deg,transparent 0px,transparent 4px,#F1EFE9 4px,#F1EFE9 6px)' },
+      oxiOpen: !!s.exp['oxi'] && s2Ripe, toggleOxi: tgl('oxi'),
+      oxiIdle: !d.oxiAuth && !armIs('oxi-a'), oxiArmed: armIs('oxi-a'), armOxi: mkArm('oxi-a'),
+      confOxi: () => this.mut(x => { this.doOxi(d); x.arm = null; }),
+      oxiDone: d.oxiAuth, oxiEnd: d.oxiEnd || '',
+
+      // mediation
+      hasMed: m.kind === 'pre',
+      medControls: !m.medDone,
+      medDone: !!m.medDone && !!m.medEnd, medEndLine: m.medEnd || '',
+      pickS: pick === 'settled', pickF: pick === 'failed', pickE: pick === 'expired', pickO: pick === 'override',
+      selS: () => this.mut(x => { x.medPick = 'settled'; x.errs = {}; x.arm = null; }),
+      selF: () => this.mut(x => { x.medPick = 'failed'; x.errs = {}; x.arm = null; }),
+      selE: () => this.mut(x => { x.medPick = 'expired'; x.errs = {}; x.arm = null; }),
+      selO: () => this.mut(x => { x.medPick = 'override'; x.errs = {}; x.arm = null; }),
+      sStyle: optStyle(pick === 'settled'), fStyle: optStyle(pick === 'failed'), eStyle: optStyle(pick === 'expired'), oStyle: optStyle(pick === 'override'),
+      medDate: getIn('med-date'), onMedDate: setIn('med-date'),
+      medBasis: getIn('med-basis'), onMedBasis: setIn('med-basis'),
+      medIdle: !armIs('med'), medArmed: armIs('med'),
+      armMed: () => { if (!pick) { this.mut(x => x.errs.med = 'Choose one outcome.'); return; } this.mut(x => { x.arm = 'med'; x.errs = {}; }); },
+      confMed, medErr: s.errs.med || '',
+      medVerb: pick ? medVerbs[pick] : 'record the outcome',
+      medStatement: pick ? medStatements[pick] : '',
+
+      // exposure
+      hasExp: !!m.exposure, expText: m.exposure ? m.exposure.text : '',
+      expToDo: m.exposure && !m.exposure.resolved,
+      expClosedForm: m.exposure && !m.exposure.resolved && !s.exp['expo'],
+      expOpen: !!s.exp['expo'] && m.exposure && !m.exposure.resolved,
+      toggleExpo: tgl('expo'),
+      expNote: getIn('exp-note'), onExpNoteI: setIn('exp-note'),
+      exIdle: !armIs('ex'), exArmed: armIs('ex'), armEx: mkArm('ex'),
+      confEx: () => {
+        const t = getIn('exp-note').trim();
+        if (!t) { this.mut(x => x.errs.ex = 'A typed note of the act done is required; it enters the Proceedings verbatim.'); return; }
+        this.mut(x => {
+          m.exposure.resolved = true; m.exposure.note = t;
+          m.exposure.end = this.endorse(m, 'Exposure resolved \u2014 "' + t + '".');
+          x.arm = null; x.exp['expo'] = false; x.inputs['exp-note'] = '';
+        });
+      },
+      exErr: s.errs.ex || '',
+      expDone: m.exposure && m.exposure.resolved, expEndLine: (m.exposure && m.exposure.end) || '',
+
+      // record
+      recFilter: s.recFilter, onRecFilter: e => { const v = e.target.value; this.mut(x => x.recFilter = v); },
+      recRows,
+
+      // intake
+      iTitle: it.title, onITitle: e => { const v = e.target.value; this.mut(x => x.intake.title = v); },
+      iForum: it.forum, onIForum: e => { const v = e.target.value; this.mut(x => x.intake.forum = v); },
+      plRows: it.plaintiffs.map((v, i) => ({ v, set: e => { const nv = e.target.value; this.mut(x => x.intake.plaintiffs[i] = nv); } })),
+      addPl: () => this.mut(x => x.intake.plaintiffs.push('')),
+      dfRows: it.defendants.map((v, i) => ({ v, set: e => { const nv = e.target.value; this.mut(x => x.intake.defendants[i] = nv); } })),
+      addDf: () => this.mut(x => x.intake.defendants.push('')),
+      places,
+      iForm: it.phase === 'form', iProcessing: it.phase === 'processing', iResult: it.phase === 'result',
+      readOk: readOk && it.phase === 'form', readBlocked: !readOk && it.phase === 'form',
+      doRead: () => {
+        this.mut(x => x.intake.phase = 'processing');
+        setTimeout(() => this.mut(x => { if (x.intake.phase === 'processing') x.intake.phase = 'result'; }), this.props.processingMs ?? 1200);
+      },
+      imIdle: !armIs('im'), imArmed: armIs('im'), armIM: mkArm('im'),
+      confIM: () => this.mut(x => {
+        const nm = this.createMatter('pre');
+        x.intake = { phase: 'form', title: '', forum: 'Commercial Court, Hyderabad', plaintiffs: [''], defendants: [''], filed: {} };
+        x.view = 'sheet'; x.activeId = nm.id; x.arm = null;
+      }),
+      ovrClosed: !s.exp['i-ovr'], ovrOpen: !!s.exp['i-ovr'], toggleOvr: tgl('i-ovr'),
+      iBasis: getIn('i-basis'), onIBasis: setIn('i-basis'),
+      ioIdle: !armIs('io'), ioArmed: armIs('io'), armIO: mkArm('io'),
+      confIO: () => {
+        const b = getIn('i-basis').trim();
+        if (!b) { this.mut(x => x.errs.io = 'A typed basis is required; it enters the record verbatim.'); return; }
+        this.mut(x => {
+          const nm = this.createMatter('override', b);
+          x.intake = { phase: 'form', title: '', forum: 'Commercial Court, Hyderabad', plaintiffs: [''], defendants: [''], filed: {} };
+          x.inputs['i-basis'] = ''; x.exp['i-ovr'] = false;
+          x.view = 'sheet'; x.activeId = nm.id; x.arm = null;
+        });
+      },
+      ioErr: s.errs.io || ''
+    };
+  }
+}
+</script>
+</body>
+</html>
